@@ -6,6 +6,10 @@ Built using a state-of-the-art dark/light glassmorphic UI design, pure JavaScrip
 
 ![image alt](https://github.com/2023btechcsectisshaunakpatel-ops/Split-wise/blob/98bc7b178349a33f87a9bb91b0bc5e50b9fff85f/Screenshot%202026-07-13%20205628.png)
 
+
+
+![image alt](https://github.com/2023btechcsectisshaunakpatel-ops/Split-wise/blob/79b9e43d244db26d762c8b6049baf197ee80c8e6/Screenshot%202026-07-13%20205644.png)
+
 ## How to Run
 
 1. Open `index.html` directly in any web browser.

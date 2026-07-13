@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitwise - Share Bills & Expenses</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-file-invoice-dollar logo-icon"></i>
+                    <span>Split<span class="logo-accent">wise</span></span>
+                </div>
+            </div>
+            
+            <!-- Active User Simulator (Premium Mock Selector) -->
+            <div class="user-simulator">
+                <label for="active-user-select"><i class="fa-solid fa-user-circle"></i> Viewing As:</label>
+                <select id="active-user-select" class="styled-select">
+                    <!-- Loaded dynamically via JS -->
+                </select>
+                <span class="simulator-hint">Toggle user to see perspective shift!</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-tab="dashboard">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-tab="groups">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Groups</span>
+                    </li>
+                    <li class="nav-item" data-tab="friends">
+                        <i class="fa-solid fa-user-group"></i>
+                        <span>Friends</span>
+                    </li>
+                    <li class="nav-item" data-tab="activity">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Recent Activity</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="theme-toggle" class="btn-theme">
+                    <i class="fa-solid fa-moon"></i>
+                    <span>Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="main-header">
+                <div class="header-title-area">
+                    <h1 id="page-title">Dashboard</h1>
+                    <p id="page-subtitle" class="header-subtitle">Welcome back to your financial control center.</p>
+                </div>
+                <div class="header-actions">
+                    <button id="btn-open-expense-modal" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add an Expense
+                    </button>
+                    <button id="btn-open-settle-modal" class="btn btn-secondary">
+                        <i class="fa-solid fa-handshake-simple"></i> Settle Up
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Screens -->
+            <div class="content-body">
+                
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="view-dashboard" class="tab-view active">
+                    <!-- Balance Summary cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card total-balance">
+                            <div class="stat-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Balance</span>
+                                <h3 id="dash-total-balance" class="stat-val neutral">₹0.00</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card you-owe">
+                            <div class="stat-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">You Owe</span>
+                                <h3 id="dash-you-owe" class="stat-val negative">₹0.00</h3>
+                            </div>
+                        </div>
+                        <div class="stat-card you-are-owed">
+                            <div class="stat-icon"><i class="fa-solid fa-arrow-up"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-label">You Are Owed</span>
+                                <h3 id="dash-you-are-owed" class="stat-val positive">₹0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Split Panels for Dashboard Details -->
+                    <div class="dashboard-details-grid">
+                        <!-- Left Panel: Balance details by Person -->
+                        <div class="glass-card balance-details-card">
+                            <div class="card-header">
+                                <h2><i class="fa-solid fa-list-check"></i> Balances by Friend</h2>
+                            </div>
+                            <div class="card-body">
+                                <div class="balances-split-container">
+                                    <div class="balance-column">
+                                        <h3 class="col-title owe-title">You Owe</h3>
+                                        <ul id="dash-owe-list" class="debt-list">
+                                            <!-- Dyn loaded -->
+                                        </ul>
+                                    </div>
+                                    <div class="balance-column">
+                                        <h3 class="col-title owed-title">You Are Owed</h3>
+                                        <ul id="dash-owed-list" class="debt-list">
+                                            <!-- Dyn loaded -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Visual analytics -->
+                        <div class="glass-card analytics-card">
+                            <div class="card-header">
+                                <h2><i class="fa-solid fa-chart-simple"></i> Spending Categories</h2>
+                            </div>
+                            <div class="card-body chart-body">
+                                <div class="chart-container">
+                                    <canvas id="expense-category-chart"></canvas>
+                                </div>
+                                <div id="chart-no-data" class="no-data-msg hidden">
+                                    <i class="fa-solid fa-chart-pie placeholder-icon"></i>
+                                    <p>No expenses logged yet. Add an expense to see breakdown.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. GROUPS VIEW -->
+                <section id="view-groups" class="tab-view">
+                    <div class="view-header-row">
+                        <h2>Your Groups</h2>
+                        <button id="btn-create-group-modal" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-folder-plus"></i> Create a Group
+                        </button>
+                    </div>
+
+                    <!-- Groups List -->
+                    <div id="groups-grid" class="groups-grid">
+                        <!-- Dyn loaded -->
+                    </div>
+
+                    <!-- Detailed Group View (initially hidden) -->
+                    <div id="group-details" class="details-pane hidden">
+                        <div class="details-header">
+                            <button id="btn-back-to-groups" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Groups</button>
+                            <h2 id="detail-group-name">Group Name</h2>
+                        </div>
+                        
+                        <div class="details-layout">
+                            <div class="details-left">
+                                <div class="glass-card">
+                                    <div class="card-header flex-header">
+                                        <h3>Expenses</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="group-expenses-list" class="expenses-list">
+                                            <!-- Dyn loaded -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="details-right">
+                                <div class="glass-card">
+                                    <div class="card-header">
+                                        <h3>Members & Balances</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="group-members-list" class="members-balance-list">
+                                            <!-- Dyn loaded -->
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="glass-card margin-top">
+                                    <div class="card-header flex-header">
+                                        <h3>Debt Settlements</h3>
+                                        <!-- Simplify Toggle -->
+                                        <label class="switch-container">
+                                            <span>Simplify Debts</span>
+                                            <input type="checkbox" id="simplify-debts-toggle" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="group-settlement-paths">
+                                            <!-- Dyn loaded -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. FRIENDS VIEW -->
+                <section id="view-friends" class="tab-view">
+                    <div class="view-header-row">
+                        <h2>Friends</h2>
+                        <button id="btn-add-friend-modal" class="btn btn-sm btn-primary">
+                            <i class="fa-solid fa-user-plus"></i> Add a Friend
+                        </button>
+                    </div>
+
+                    <!-- Friends List -->
+                    <div id="friends-list-container" class="friends-list-container">
+                        <!-- Dyn loaded -->
+                    </div>
+
+                    <!-- Detailed Friend View (initially hidden) -->
+                    <div id="friend-details" class="details-pane hidden">
+                        <div class="details-header">
+                            <button id="btn-back-to-friends" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Friends</button>
+                            <h2 id="detail-friend-name">Friend Name</h2>
+                            <p id="detail-friend-net-status" class="friend-net-status"></p>
+                        </div>
+                        
+                        <div class="details-layout single-col">
+                            <div class="glass-card">
+                                <div class="card-header">
+                                    <h3>Transaction History</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul id="friend-expenses-list" class="expenses-list">
+                                        <!-- Dyn loaded -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. RECENT ACTIVITY VIEW -->
+                <section id="view-activity" class="tab-view">
+                    <div class="glass-card activity-card">
+                        <div class="card-header flex-header">
+                            <h2>Transaction & Event Log</h2>
+                            <button id="btn-clear-activity" class="btn btn-sm btn-danger">Clear Logs</button>
+                        </div>
+                        <div class="card-body">
+                            <ul id="activity-log-list" class="activity-log-list">
+                                <!-- Dyn loaded -->
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- ADD EXPENSE MODAL -->
+    <div id="modal-expense" class="modal-backdrop">
+        <div class="modal-content glass-modal animate-scale">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-receipt"></i> Add an Expense</h2>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-add-expense">
+                <div class="modal-body">
+                    <!-- Basic details -->
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label for="exp-desc">Description</label>
+                            <input type="text" id="exp-desc" placeholder="e.g. Flight tickets, Groceries" required>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="exp-amount">Amount (₹)</label>
+                            <input type="number" id="exp-amount" min="0.01" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="exp-group">With Group</label>
+                            <select id="exp-group" class="styled-select">
+                                <option value="">No Group (Individual Expense)</option>
+                                <!-- Dyn loaded -->
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="exp-category">Category</label>
+                            <select id="exp-category" class="styled-select">
+                                <option value="general">General</option>
+                                <option value="food">Food & Drink</option>
+                                <option value="travel">Travel & Lodging</option>
+                                <option value="rent">Rent & Utilities</option>
+                                <option value="entertainment">Entertainment</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="exp-date">Date</label>
+                            <input type="date" id="exp-date" required>
+                        </div>
+                    </div>
+
+                    <hr class="modal-divider">
+
+                    <!-- Payer and Split Setup -->
+                    <div class="split-setup-area">
+                        <div class="form-row align-center">
+                            <div class="form-group">
+                                <span>Paid by:</span>
+                                <select id="exp-payer" class="styled-select margin-left-sm">
+                                    <!-- Dynamic -->
+                                </select>
+                            </div>
+                            <div class="form-group margin-left-md">
+                                <span>Split method:</span>
+                                <select id="exp-split-type" class="styled-select margin-left-sm">
+                                    <option value="equal">Split Equally</option>
+                                    <option value="exact">Split Unequally (Exact Amount)</option>
+                                    <option value="percentage">Split by Percentages</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic list of participants generated depending on Group selection / Friends selected -->
+                        <div class="participants-section">
+                            <h4>Split Details</h4>
+                            <div id="split-participants-container" class="split-participants-container">
+                                <!-- Generated Dynamically based on split-type -->
+                            </div>
+                            <div class="split-summary-msg" id="split-summary-msg">
+                                <!-- Shows running calculations/errors -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SETTLE UP MODAL -->
+    <div id="modal-settle" class="modal-backdrop">
+        <div class="modal-content glass-modal animate-scale">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-handshake-simple"></i> Record a Payment</h2>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-settle">
+                <div class="modal-body">
+                    <div class="settle-flow-visual">
+                        <div class="settle-party payer-party">
+                            <label for="settle-payer">Who paid:</label>
+                            <select id="settle-payer" class="styled-select" required>
+                                <!-- Dyn loaded -->
+                            </select>
+                        </div>
+                        <div class="settle-arrow">
+                            <i class="fa-solid fa-circle-arrow-right animate-pulse"></i>
+                        </div>
+                        <div class="settle-party receiver-party">
+                            <label for="settle-receiver">Who was paid:</label>
+                            <select id="settle-receiver" class="styled-select" required>
+                                <!-- Dyn loaded -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row margin-top">
+                        <div class="form-group flex-1">
+                            <label for="settle-amount">Amount Paid (₹)</label>
+                            <input type="number" id="settle-amount" min="0.01" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="settle-group">Within Group</label>
+                            <select id="settle-group" class="styled-select">
+                                <option value="">No Group (Individual Debt)</option>
+                                <!-- Dyn loaded -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="settle-date">Date</label>
+                            <input type="date" id="settle-date" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CREATE GROUP MODAL -->
+    <div id="modal-group" class="modal-backdrop">
+        <div class="modal-content glass-modal animate-scale">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-users"></i> Create a Group</h2>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-create-group">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="group-name">Group Name</label>
+                        <input type="text" id="group-name" placeholder="e.g. Weekend Trip, Apartment 3B" required>
+                    </div>
+
+                    <div class="form-group margin-top">
+                        <label>Select Members</label>
+                        <div id="group-members-selection" class="members-checklist-container">
+                            <!-- Dyn loaded with friends checkboxes -->
+                        </div>
+                        <span class="form-hint">Must select at least one friend (including yourself) to form a group.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD FRIEND MODAL -->
+    <div id="modal-friend" class="modal-backdrop">
+        <div class="modal-content glass-modal animate-scale">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-user-plus"></i> Add a Friend</h2>
+                <button class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-add-friend">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="friend-name">Friend's Name</label>
+                        <input type="text" id="friend-name" placeholder="Enter name" required>
+                    </div>
+                    <div class="form-group margin-top">
+                        <label for="friend-email">Email Address (Optional)</label>
+                        <input type="email" id="friend-email" placeholder="e.g. friend@example.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Friend</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>

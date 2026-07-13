@@ -21,7 +21,7 @@ Built using a state-of-the-art dark/light glassmorphic UI design, pure JavaScrip
 
 
 
-![image alt]()
+![image alt](https://github.com/2023btechcsectisshaunakpatel-ops/Split-wise/blob/3071622d29d500ec53c7997352da4debe7108c82/Screenshot%202026-07-13%20205745.png)
 
 
 
